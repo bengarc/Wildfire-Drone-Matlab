@@ -3,3 +3,11 @@
 
 %%can do a for loop w/ decay function and drone shooting function to plot
 %%the heat map versus time
+
+
+while max(Fire) ~= 0 
+
+end
+
+fprintf("Fire has been extinguished!")
+
