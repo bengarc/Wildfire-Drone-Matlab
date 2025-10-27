@@ -8,8 +8,8 @@ Fire = zeros(n);
 
 Int = 1;
 
-randNum1 = randi([1, n])
-randNum2 = randi([1, n])
+randNum1 = randi([1, n]);
+randNum2 = randi([1, n]);
 
 %%random point max intensity
 Fire(randNum1, randNum2) = Int;
@@ -52,6 +52,7 @@ end
 ctr1 = 1; 
 ctr2 = 1; 
 
+
 %%left traverse upwards 
 while randNum1 - ctr1 ~= 0 && randNum2 - ctr2 ~= 0
     Fire(randNum1 - ctr1, randNum2 - ctr2) = Int/(ctr1+1);
@@ -88,21 +89,18 @@ ctr2 = 1;
 
 %%right traverse downwards
 while  randNum1 + ctr1 ~= n+1 && randNum2 + ctr2 ~= n+1
-    Fire(randNum1 + ctr1, randNum2 + ctr2) = Int/(ctr1+1);
+    Fire(randNum1 + ctr1, randNum2 + ctr2) = Int/(ctr1+1)
     ctr1 = ctr1 + 1;
     ctr2 = ctr2 + 1;
 end
 
-
 for ii = 1:n
     for kk = 1:n
         if Fire(ii, kk) == 0
-            Fire(ii, kk) = 0.01*Int;
+            Fire(ii, kk) = max(Fire(:,kk))*0.5;
+            Fire(ii, kk) = max(Fire(ii,:))*0.5;
         end
     end
 end
 
-
-
-
-imagesc(Fire)
+FireDecay(Fire, 100, Int)
