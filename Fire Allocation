@@ -1,3 +1,4 @@
+
 %%FIRE ENVIRONMENT
 
 %n = input("How big shall the fire be given a square enclosure (N x N): ");
@@ -97,10 +98,12 @@ end
 for ii = 1:n
     for kk = 1:n
         if Fire(ii, kk) == 0
-            Fire(ii, kk) = max(Fire(:,kk))*0.5;
-            Fire(ii, kk) = max(Fire(ii,:))*0.5;
+            Fire(ii, kk) = max(Fire(:,kk))*0.33;
+            Fire(ii, kk) = max(Fire(ii,:))*0.33;
         end
     end
 end
+
+imagesc(Fire)
 
 FireDecay(Fire, 100, Int)
