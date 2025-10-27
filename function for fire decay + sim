@@ -1,0 +1,10 @@
+function FireDecay(fireMatrix, timeElapsedMin, Intensity)
+
+    for ii = 1:timeElapsedMin
+        fireMatrix = fireMatrix*exp(-ii/3600)
+        imagesc(fireMatrix)
+        caxis([0 Intensity]);
+        pause(0.1);
+    end
+    
+end
