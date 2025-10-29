@@ -1,0 +1,41 @@
+numDrones = 5;
+n=30; %The grid 
+
+
+%Drones' struct 
+drones = struct('id', {}, 'pos', {}, 'proposed', {}, 'target', {});
+
+occupied = false(n,n); %Temporary drone collision
+
+%Creating the drones (for loop method)
+for i = 1:numDrones
+    placed = false;
+
+   while ~placed
+       r = randi([1,n]);
+       c = randi([1,n]);
+       if ~occupied(r,c)
+           occupied(r,c) = true;
+
+           %Drone number (from 1-5)
+           drone.id = i; 
+           %Drone'scurrent position [row, column]
+           drone.pos = [r,c];
+           %next position suggestion(for movement logic later)
+           drone.proposed = [r,c];
+           %Drone's target
+           drone.target = [r,c];
+            drones(i) = drone; 
+            placed = true;
+       end 
+   end
+end 
+
+
+disp("Drone Array Initialized:");
+for i = 1:numDrones
+    fprintf("Drone %d Start Position: [%d,%d]\n", ...
+        drones(i).id, drones(i).pos(1), drones(i).pos(2));
+end
+
+
