@@ -165,12 +165,22 @@ while max(Fire(:)) ~= 0
         Fire = Fire*exp(-(ii+counter)/3600);
         imagesc(Fire);
         caxis([0 Int]);
-        pause(0.1);
+        pause(0.05);
         fprintf("\nDrone %d Start Position: [%d,%d]\n", ...
         drones(i).id, drones(i).pos(1), drones(i).pos(2));
-        drones(i).waterAmount = 1;
         
     end
+        drones(1).waterAmount = 1;
+        drones(2).waterAmount = 1;
+        drones(3).waterAmount = 1;
+        drones(4).waterAmount = 1;
+        drones(5).waterAmount = 1;
+       
+       
+       
+    
+
+       
     counter = counter + 1;
 end
 
@@ -227,16 +237,17 @@ end
 %creates the fire decay versus tim
 
 
-function FireDecay(fireMatrix, timeElapsedMin, Intensity)
+%function FireDecay(fireMatrix, timeElapsedMin, Intensity)
 
-    for ii = 1:timeElapsedMin
-        fireMatrix = fireMatrix*exp(-ii/3600)
-        imagesc(fireMatrix)
-        caxis([0 Intensity]);
-        pause();
-    end
+    %for ii = 1:timeElapsedMin
+     %   fireMatrix = fireMatrix*exp(-ii/3600)
+     %   imagesc(fireMatrix)
+     %   caxis([0 Intensity]);
+      %  pause();
+    %end
     
-end
+%end
+
 
 
 %   tr = target row
@@ -274,6 +285,8 @@ function next = step_one(pos,tgt,n)
     r=max(1,min(n,r));
     c=max(1,min(n,c));
     next = [r,c];
+
+
 
 end 
 
