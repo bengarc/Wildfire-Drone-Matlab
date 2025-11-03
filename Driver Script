@@ -1,5 +1,5 @@
 %%driver script
-
+%%Benjamin Garcia and Dwayne Farjardo
 
 %%FIRE ENVIRONMENT
 
@@ -9,7 +9,7 @@ n = 30;
 
 Fire = zeros(n);
 
-Int = 1;
+Int = 100;
 
 randNum1 = randi([1, n]);
 randNum2 = randi([1, n]);
@@ -106,9 +106,196 @@ for ii = 1:n
     end
 end
 
-while max(Fire) ~= 0 
 
+disp("Fire Matrix Initialized:");
+imagesc(Fire)
+
+numDrones = 5;
+%n=30; The grid 
+%taken care off w/ prior n 
+
+
+%Drones' struct 
+drones = struct('id', {}, 'pos', {}, 'proposed', {}, 'target', {}, 'waterAmount', {});
+
+occupied = false(n,n); %Temporary drone collision
+
+%Creating the drones (for loop method)
+for i = 1:numDrones
+    placed = false;
+
+   while ~placed
+       r = randi([1,n]);
+       c = randi([1,n]);
+       if ~occupied(r,c)
+           occupied(r,c) = true;
+
+           %Drone number (from 1-5)
+           drone.id = i; 
+           %Drone's amount of water 1 -> remove all of fire in one cell but
+           %less than the surounding
+           drone.waterAmount = 1;
+           %Drone'scurrent position [row, column]
+           drone.pos = [r,c];
+           %next position suggestion(for movement logic later)
+           drone.proposed = [r,c];
+           %Drone's target
+           drone.target = [r,c];
+            drones(i) = drone; 
+            placed = true;
+       end 
+   end
+end 
+
+
+disp("Drone Array Initialized:");
+for i = 1:numDrones
+    fprintf("\nDrone %d Start Position: [%d,%d]\n", ...
+        drones(i).id, drones(i).pos(1), drones(i).pos(2));
+end
+
+
+while max(Fire(:)) ~= 0 
+    counter = 1
+    for i = 1:numDrones
+        x = max(Fire(:))
+        [tr, tc] = hottest_cell(Fire);
+        Fire = waterToFire(Fire, drones(i).pos, drones(i).waterAmount, n);
+        drones(i).pos = step_one(drones(i).pos, [tr, tc], n);
+        Fire = Fire*exp(-(ii+counter)/3600);
+        imagesc(Fire);
+        caxis([0 Int]);
+        pause(0.1);
+        fprintf("\nDrone %d Start Position: [%d,%d]\n", ...
+        drones(i).id, drones(i).pos(1), drones(i).pos(2));
+        drones(i).waterAmount = 1;
+        
+    end
+    counter = counter + 1;
 end
 
 fprintf("Fire has been extinguished!")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%function takes in drone struct positionand fire matrix in order to to make one
+%%point from the water to make intensity at a point zero
+
+function  newMatrix = waterToFire(fireMatrix, dronePosition, droneAmount, n)
+    newMatrix = fireMatrix;
+    for ii = 1:length(fireMatrix(1,:))
+        for kk = 1:length(fireMatrix(:,1))
+            if dronePosition == [ii,kk] 
+                newMatrix(ii, kk) = 0.1*fireMatrix(ii, kk);
+                    if (ii - 1) ~= 0 && (kk - 1) ~= 0
+                        newMatrix(ii - 1, kk - 1) = 0.25*fireMatrix(ii, kk);
+                        newMatrix(ii - 1, kk) = 0.25*fireMatrix(ii, kk);
+                        newMatrix(ii, kk - 1) = 0.25*fireMatrix(ii, kk);
+                    end
+                newMatrix(ii + 1, kk) = 0.25*fireMatrix(ii, kk);
+                newMatrix(ii, kk + 1) = 0.25*fireMatrix(ii, kk);
+                newMatrix(ii + 1, kk + 1) = 0.25*fireMatrix(ii, kk);
+            end
+
+        end
+    end
+    droneAmount = 0;
+end
+
+%creates the fire decay versus tim
+
+
+function FireDecay(fireMatrix, timeElapsedMin, Intensity)
+
+    for ii = 1:timeElapsedMin
+        fireMatrix = fireMatrix*exp(-ii/3600)
+        imagesc(fireMatrix)
+        caxis([0 Intensity]);
+        pause();
+    end
+    
+end
+
+
+%   tr = target row
+%   tc = target column
+%   r = row
+%   c = column
+
+%   Picking the target (hottest cell in the grid)
+
+function [tr, tc] = hottest_cell(I)
+    [~,idx] = max(I(:));
+    [rows,~] = size(I);
+    tc = mod(idx-1,rows) + 1;
+    tr = floor((idx-1) / rows) + 1;
+end 
+
+%   moving to 1 cell toward target 
+
+function next = step_one(pos,tgt,n)
+    r = pos(1); 
+    c = pos(2);
+    tr = tgt(1);
+    tc = tgt(2);
+
+    if r < tr
+        r = r + 1;
+    elseif r > tr
+        r = r - 1;
+    elseif c < tc
+        c = c + 1;
+    elseif c > tc
+        c = c - 1;
+    end
+
+    r=max(1,min(n,r));
+    c=max(1,min(n,c));
+    next = [r,c];
+
+end 
+
+
+
+
+% Test script for this script: 
+
+% % Test script
+% n = 30; 
+% 
+% I = rand(n, n) * 100;  
+% I(15, 20) = 500;       
+% 
+% 
+% [tr, tc] = hottest_cell(I);
+% fprintf('Hottest cell is at: [%d, %d]\n', tr, tc);
+% 
+% 
+% drone_pos = [5, 5];
+% target = [tr, tc];
+% next_pos = step_one(drone_pos, target, n);
+% fprintf('Drone moves from [%d, %d] to [%d, %d]\n', ...
+%     drone_pos(1), drone_pos(2), next_pos(1), next_pos(2));
 
