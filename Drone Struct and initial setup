@@ -32,10 +32,3 @@ for i = 1:numDrones
 end 
 
 
-disp("Drone Array Initialized:");
-for i = 1:numDrones
-    fprintf("Drone %d Start Position: [%d,%d]\n", ...
-        drones(i).id, drones(i).pos(1), drones(i).pos(2));
-end
-
-
