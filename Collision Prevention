@@ -1,0 +1,27 @@
+%   How this works: since each drone has a unique id number (drone.id = 1,2,3...) 
+%   Their ID can represent the priority for moving to the same grid cell.
+%   The lowest Id wins the contested cell.
+
+function drones = avoid_collision(drones,n)
+
+occupy = false(n,n);
+[~,order] = sort([drones.id],'ascend');
+
+
+for k = 1:numel(order)
+    i = order(k) ;
+    p = drones(i).proposed;
+    p(1) = max(1,min(n,round(p(1))));
+    p(2) = max(1,min(n,round(p(2))));
+
+    if ~occupy(p(1),p(2))
+        occupy(p(1),p(2)) = true;
+        drones(i).proposed = p;
+    else 
+        currentPos = drones(i).pos;
+        drones(i).proposed = currentPos 
+        occupy(currentPos(1),currentPos(2)) = true;
+    end
+end
+end 
+
