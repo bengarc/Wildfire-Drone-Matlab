@@ -36,24 +36,3 @@ next = [r,c]
 
 end 
 
-
-
-
-% Test script for this script: 
-
-% % Test script
-% n = 30; 
-% 
-% I = rand(n, n) * 100;  
-% I(15, 20) = 500;       
-% 
-% 
-% [tr, tc] = hottest_cell(I);
-% fprintf('Hottest cell is at: [%d, %d]\n', tr, tc);
-% 
-% 
-% drone_pos = [5, 5];
-% target = [tr, tc];
-% next_pos = step_one(drone_pos, target, n);
-% fprintf('Drone moves from [%d, %d] to [%d, %d]\n', ...
-%     drone_pos(1), drone_pos(2), next_pos(1), next_pos(2));
