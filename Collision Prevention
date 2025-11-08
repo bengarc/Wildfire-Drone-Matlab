@@ -19,7 +19,7 @@ for k = 1:numel(order)
         drones(i).proposed = p;
     else 
         currentPos = drones(i).pos;
-        drones(i).proposed = currentPos 
+        drones(i).proposed = currentPos; 
         occupy(currentPos(1),currentPos(2)) = true;
     end
 end
