@@ -1,3 +1,20 @@
+%Updated with near miss detection for summary table
+
+allProps = zeros(numDrones,2);
+for i = 1:numDrones
+    allProps(i,:) = drones(i).proposed;
+end
+for i = 1:numDrones
+    dup = ismember(allProps, allProps(i,:), 'rows');
+    if sum(dup) > 1
+        drones(i).nearMiss = drones(i).nearMiss + 1;
+    end
+end
+
+
+
+
+
 %   How this works: since each drone has a unique id number (drone.id = 1,2,3...) 
 %   Their ID can represent the priority for moving to the same grid cell.
 %   The lowest Id wins the contested cell.
