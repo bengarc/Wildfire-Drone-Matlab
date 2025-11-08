@@ -1,0 +1,235 @@
+clear; clc; close all;
+
+
+numDrones       = 5;
+n               = 30;     
+maxSteps        = 300;
+stopThresh      = 0.1;    
+k_decay         = 0.08;   
+w_ax            = 0.006;   
+w_diag          = w_ax/sqrt(2);  
+radiusDrop      = 1;      
+neighborFactor  = 0.25;  
+rng(1);                   
+
+
+Fire = zeros(n);
+Int  = 1;
+
+randNum1 = randi([1, n]);
+randNum2 = randi([1, n]);
+Fire(randNum1, randNum2) = Int;   
+
+ctr = 1;
+while randNum1 - ctr ~= 0
+    Fire(randNum1 - ctr, randNum2) = Int*exp(-ctr/10);
+    ctr = ctr + 1;
+end
+
+ctr = 1; 
+while randNum1 + ctr ~= n+1
+    Fire(randNum1 + ctr, randNum2) = Int*exp(-ctr/10);
+    ctr = ctr + 1;
+end
+
+ctr = 1; 
+while randNum2 + ctr ~= n+1
+    Fire(randNum1, randNum2 + ctr) = Int*exp(-ctr/10);
+    ctr = ctr + 1;
+end
+
+ctr = 1; 
+while randNum2 - ctr ~= 0
+    Fire(randNum1, randNum2 - ctr) = Int*exp(-ctr/10);
+    ctr = ctr + 1;
+end
+
+
+ctr1 = 1; ctr2 = 1; 
+while randNum1 - ctr1 ~= 0 && randNum2 - ctr2 ~= 0
+    Fire(randNum1 - ctr1, randNum2 - ctr2) = Int*exp(-ctr1/10);
+    ctr1 = ctr1 + 1; ctr2 = ctr2 + 1;
+end
+ctr1 = 1; ctr2 = 1; 
+while randNum1 - ctr1 ~= 0 && randNum2 + ctr2 ~= n+1
+    Fire(randNum1 - ctr1, randNum2 + ctr2) = Int*exp(-ctr1/10);
+    ctr1 = ctr1 + 1; ctr2 = ctr2 + 1;
+end
+ctr1 = 1; ctr2 = 1; 
+while randNum1 + ctr1 ~= n+1 && randNum2 - ctr2 ~= 0
+    Fire(randNum1 + ctr1, randNum2 - ctr2) = Int*exp(-ctr1/10);
+    ctr1 = ctr1 + 1; ctr2 = ctr2 + 1;
+end
+ctr1 = 1; ctr2 = 1; 
+while randNum1 + ctr1 ~= n+1 && randNum2 + ctr2 ~= n+1
+    Fire(randNum1 + ctr1, randNum2 + ctr2) = Int*exp(-ctr1/10);
+    ctr1 = ctr1 + 1; ctr2 = ctr2 + 1;
+end
+
+
+for ii = 1:n
+    for kk = 1:n
+        if Fire(ii, kk) == 0
+            Fire(ii, kk) = max(Fire(:,kk)) * 0.7;
+            Fire(ii, kk) = max(Fire(ii,:)) * 0.7;
+        end
+    end
+end
+Fire = min(max(Fire,0),1);
+
+
+drones = struct('id', {}, 'pos', {}, 'proposed', {}, 'target', {});
+occupied = false(n,n);
+
+for i = 1:numDrones
+    placed = false;
+    while ~placed
+        r = randi([1,n]); c = randi([1,n]);
+        if ~occupied(r,c)
+            occupied(r,c) = true;
+            drone.id       = i;
+            drone.pos      = [r,c];
+            drone.proposed = [r,c];
+            drone.target   = [r,c];
+            drones(i) = drone; 
+            placed = true;
+        end
+    end
+end
+
+disp("Drone Array Initialized:");
+for i = 1:numDrones
+    fprintf("Drone %d Start Position: [%d,%d]\n", ...
+        drones(i).id, drones(i).pos(1), drones(i).pos(2));
+end
+
+
+figure;
+imagesc(Fire, [0 1]); colormap(hot); axis equal tight;
+title('Initial Fire Intensity with Drone Positions'); hold on;
+for i = 1:numDrones
+    pos = drones(i).pos;
+    plot(pos(2), pos(1), 'ws', 'MarkerFaceColor','w', 'MarkerSize', 8);
+    text(pos(2), pos(1), num2str(drones(i).id), ...
+        'Color','k','FontWeight','bold','HorizontalAlignment','center');
+end
+hold off;
+
+
+figure; colormap(hot);
+for step = 1:maxSteps
+    
+     
+    Fire = Fire .* exp(-k_decay);                                 
+    Fire = min(max(Fire,0),1);                                    
+
+    
+    [tr, tc] = hottest_cell_original(Fire);
+
+    
+    for i = 1:numDrones
+        drones(i).target   = [tr, tc];
+        drones(i).proposed = step_one(drones(i).pos, drones(i).target, n);
+    end
+
+   
+    drones = avoid_collision(drones, n);
+
+   
+    for i = 1:numDrones
+        drones(i).pos = drones(i).proposed;
+        if Fire(drones(i).pos(1), drones(i).pos(2)) > 0
+            Fire = waterToFire(Fire, drones(i).pos, radiusDrop, neighborFactor);
+        end
+    end
+
+    
+    imagesc(Fire, [0 1]); axis equal tight; hold on
+    for i = 1:numDrones
+        pos = drones(i).pos;
+        plot(pos(2), pos(1), 'ws', 'MarkerFaceColor','w', 'MarkerSize', 8);
+        text(pos(2), pos(1), num2str(drones(i).id), ...
+            'Color','k','FontWeight','bold','HorizontalAlignment','center');
+    end
+    title(sprintf('Step %d | max(I)=%.3f', step, max(Fire,[],'all')))
+    hold off; drawnow limitrate
+
+    
+    if max(Fire,[],'all') < stopThresh
+        fprintf('Stopped at step %d (max intensity < %.2f)\n', step, stopThresh);
+        break
+    end
+end
+
+
+
+
+function drones = avoid_collision(drones,n)
+    occupy = false(n,n);
+    [~,order] = sort([drones.id],'ascend');
+    for k = 1:numel(order)
+        i = order(k);
+        p = drones(i).proposed;
+        p(1) = max(1,min(n,round(p(1))));
+        p(2) = max(1,min(n,round(p(2))));
+        if ~occupy(p(1),p(2))
+            occupy(p(1),p(2)) = true;
+            drones(i).proposed = p;
+        else
+            currentPos = drones(i).pos;
+            drones(i).proposed = currentPos;      
+            occupy(currentPos(1),currentPos(2)) = true;
+        end
+    end
+end
+
+
+function [tr, tc] = hottest_cell_original(I)
+    
+    if ~any(I(:))
+        tr = 1; tc = 1; return;
+    end
+    [~,idx] = max(I(:));
+    [rows,~] = size(I);
+    tc = mod(idx-1,rows) + 1;                  
+    tr = floor((idx-1) / rows) + 1;            
+end
+
+
+function next = step_one(pos,tgt,n)
+    r = pos(1); c = pos(2);
+    tr = tgt(1); tc = tgt(2);
+    if r < tr
+        r = r + 1;
+    elseif r > tr
+        r = r - 1;
+    elseif c < tc
+        c = c + 1;
+    elseif c > tc
+        c = c - 1;
+    end
+    r = max(1,min(n,r));
+    c = max(1,min(n,c));
+    next = [r,c];
+end
+
+
+function I = waterToFire(I, center, radius, neighborFactor)
+    n = size(I,1);
+    r0 = center(1); c0 = center(2);
+    rmin = max(1, r0 - radius); rmax = min(n, r0 + radius);
+    cmin = max(1, c0 - radius); cmax = min(n, c0 + radius);
+
+    I(r0, c0) = 0;  
+
+    for rr = rmin:rmax
+        for cc = cmin:cmax
+            if ~(rr==r0 && cc==c0)
+                I(rr, cc) = neighborFactor * I(rr, cc);
+            end
+        end
+    end
+end
+
+
+
