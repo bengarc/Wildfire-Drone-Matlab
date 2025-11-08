@@ -1,0 +1,30 @@
+ids           = [drones.id]';
+extinguished  = [drones.extinguished]';
+distance      = [drones.dist]';
+stepsActive   = [drones.steps]';
+nearMisses    = [drones.nearMiss]';
+efficiency    = extinguished ./ max(distance,1);
+
+Summary = table(ids, extinguished, distance, stepsActive, nearMisses, efficiency, ...
+    'VariableNames', {'DroneID','Extinguished','Distance','Steps','NearMisses','Efficiency'});
+
+disp('=== FINAL SUMMARY TABLE ===');
+disp(Summary);
+
+writetable(Summary,'summary.csv');
+save('run_data.mat','Fire','drones','n','maxSteps','stopThresh','k_decay','w_ax','w_diag','radiusDrop','neighborFactor');
+
+[~, idxTopExt] = max(extinguished);
+[~, idxTopEff] = max(efficiency);
+[~, idxTopDist]= max(distance);
+
+fprintf('\n=== INTERPRETATION BULLETS ===\n');
+fprintf('• Drone %d extinguished the most cells (%d).\n', ids(idxTopExt), extinguished(idxTopExt));
+fprintf('• Drone %d was most efficient (%.3f cells per unit distance).\n', ids(idxTopEff), efficiency(idxTopEff));
+fprintf('• Drone %d traveled the farthest (distance = %d).\n', ids(idxTopDist), distance(idxTopDist));
+if any(nearMisses>0)
+    [~, idxMostNM] = max(nearMisses);
+    fprintf('• Drone %d had the most contested moves (%d near-misses), showing collision avoidance engaged often.\n', ...
+        ids(idxMostNM), nearMisses(idxMostNM));
+end
+fprintf('• Simulation ended when max intensity dropped below %.2f.\n', stopThresh);
