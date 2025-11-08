@@ -1,0 +1,10 @@
+numDrones       = 5;
+n               = 30;     
+maxSteps        = 300;
+stopThresh      = 0.1;    
+k_decay         = 0.05;   
+w_ax            = 0.04;   
+w_diag          = w_ax/sqrt(2);  
+radiusDrop      = 1;      
+neighborFactor  = 0.25;  
+rng(1);                   
