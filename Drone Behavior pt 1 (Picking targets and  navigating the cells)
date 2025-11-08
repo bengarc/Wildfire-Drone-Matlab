@@ -32,7 +32,7 @@ end
 
 r=max(1,min(n,r));
 c=max(1,min(n,c));
-next = [r,c]
+next = [r,c];
 
 end 
 
