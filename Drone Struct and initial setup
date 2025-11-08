@@ -1,6 +1,3 @@
-numDrones = 5;
-n=30; %The grid 
-
 
 %Drones' struct 
 drones = struct('id', {}, 'pos', {}, 'proposed', {}, 'target', {});
@@ -37,3 +34,31 @@ for i = 1:numDrones
         drones(i).id, drones(i).pos(1), drones(i).pos(2));
 end
 
+drones = struct('id', {}, 'pos', {}, 'proposed', {}, 'target', {});
+occupied = false(n,n);
+
+
+%updated with metrics for summary table 
+for i = 1:numDrones
+    placed = false;
+    while ~placed
+        r = randi([1,n]); c = randi([1,n]);
+        if ~occupied(r,c)
+            occupied(r,c) = true;
+            drone.id       = i;
+            drone.pos      = [r,c];
+            drone.proposed = [r,c];
+            drone.target   = [r,c];
+            drones(i) = drone; 
+            placed = true;
+        end
+    end
+end
+
+
+for i = 1:numDrones
+    drones(i).extinguished = 0;   
+    drones(i).dist         = 0;   
+    drones(i).steps        = 0;   
+    drones(i).nearMiss     = 0;   
+end
