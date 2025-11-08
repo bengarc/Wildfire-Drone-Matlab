@@ -3,7 +3,7 @@ clear; clc; close all;
 
 numDrones       = 5;
 n               = 30;     
-maxSteps        = 300;
+maxSteps        = 300000;
 stopThresh      = 0.1;    
 k_decay         = 0.08;   
 w_ax            = 0.006;   
@@ -97,6 +97,15 @@ for i = 1:numDrones
     end
 end
 
+
+for i = 1:numDrones
+    drones(i).extinguished = 0;   
+    drones(i).dist         = 0;   
+    drones(i).steps        = 0;   
+    drones(i).nearMiss     = 0;   
+end
+
+
 disp("Drone Array Initialized:");
 for i = 1:numDrones
     fprintf("Drone %d Start Position: [%d,%d]\n", ...
@@ -136,12 +145,24 @@ for step = 1:maxSteps
     drones = avoid_collision(drones, n);
 
    
-    for i = 1:numDrones
-        drones(i).pos = drones(i).proposed;
-        if Fire(drones(i).pos(1), drones(i).pos(2)) > 0
-            Fire = waterToFire(Fire, drones(i).pos, radiusDrop, neighborFactor);
-        end
+   for i = 1:numDrones
+    oldPos = drones(i).pos;
+    newPos = drones(i).proposed;
+
+    
+    stepDist = abs(newPos(1)-oldPos(1)) + abs(newPos(2)-oldPos(2));
+    drones(i).dist  = drones(i).dist + stepDist;
+    drones(i).steps = drones(i).steps + 1;
+
+    drones(i).pos = newPos;
+
+ 
+    if Fire(newPos(1), newPos(2)) > 0
+        drones(i).extinguished = drones(i).extinguished + 1;
+        Fire = waterToFire(Fire, newPos, radiusDrop, neighborFactor);
     end
+end
+
 
     
     imagesc(Fire, [0 1]); axis equal tight; hold on
@@ -161,6 +182,17 @@ for step = 1:maxSteps
     end
 end
 
+
+allProps = zeros(numDrones,2);
+for i = 1:numDrones
+    allProps(i,:) = drones(i).proposed;
+end
+for i = 1:numDrones
+    dup = ismember(allProps, allProps(i,:), 'rows');
+    if sum(dup) > 1
+        drones(i).nearMiss = drones(i).nearMiss + 1;
+    end
+end
 
 
 
@@ -230,6 +262,38 @@ function I = waterToFire(I, center, radius, neighborFactor)
         end
     end
 end
+
+ids           = [drones.id]';
+extinguished  = [drones.extinguished]';
+distance      = [drones.dist]';
+stepsActive   = [drones.steps]';
+nearMisses    = [drones.nearMiss]';
+efficiency    = extinguished ./ max(distance,1);
+
+Summary = table(ids, extinguished, distance, stepsActive, nearMisses, efficiency, ...
+    'VariableNames', {'DroneID','Extinguished','Distance','Steps','NearMisses','Efficiency'});
+
+disp('=== FINAL SUMMARY TABLE ===');
+disp(Summary);
+
+writetable(Summary,'summary.csv');
+save('run_data.mat','Fire','drones','n','maxSteps','stopThresh','k_decay','w_ax','w_diag','radiusDrop','neighborFactor');
+
+[~, idxTopExt] = max(extinguished);
+[~, idxTopEff] = max(efficiency);
+[~, idxTopDist]= max(distance);
+
+fprintf('\n=== INTERPRETATION BULLETS ===\n');
+fprintf('• Drone %d extinguished the most cells (%d).\n', ids(idxTopExt), extinguished(idxTopExt));
+fprintf('• Drone %d was most efficient (%.3f cells per unit distance).\n', ids(idxTopEff), efficiency(idxTopEff));
+fprintf('• Drone %d traveled the farthest (distance = %d).\n', ids(idxTopDist), distance(idxTopDist));
+if any(nearMisses>0)
+    [~, idxMostNM] = max(nearMisses);
+    fprintf('• Drone %d had the most contested moves (%d near-misses), showing collision avoidance engaged often.\n', ...
+        ids(idxMostNM), nearMisses(idxMostNM));
+end
+fprintf('• Simulation ended when max intensity dropped below %.2f.\n', stopThresh);
+
 
 
 
