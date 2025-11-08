@@ -1,0 +1,120 @@
+%%FIRE ENVIRONMENT
+
+%n = input("How big shall the fire be given a square enclosure (N x N): ");
+
+n = 30; 
+
+Fire = zeros(n);
+
+Int = 1;
+
+randNum1 = randi([1, n]);
+randNum2 = randi([1, n]);
+
+%%random point max intensity
+Fire(randNum1, randNum2) = Int;
+
+ctr = 1;
+
+%%upwards traverse
+while randNum1 - ctr ~= 0
+    Fire(randNum1 - ctr, randNum2) = Int*exp(-ctr/10);
+    ctr = ctr + 1;
+end
+
+ctr = 1; 
+
+%%downwards traverse
+while randNum1 + ctr ~= n+1
+    Fire(randNum1 + ctr, randNum2) = Int*exp(-ctr/10);
+    ctr = ctr + 1;
+    
+end
+
+ctr = 1; 
+
+%%right traverse
+while randNum2 + ctr ~= n+1
+    Fire(randNum1, randNum2 +ctr) = Int*exp(-ctr/10);
+    ctr = ctr + 1;
+end
+
+ctr = 1; 
+
+%%left traverse
+while randNum2 - ctr ~= 0
+    Fire(randNum1, randNum2 - ctr) = Int*exp(-ctr/10);
+    ctr = ctr + 1;
+end
+
+%diagonal traverses
+
+ctr1 = 1; 
+ctr2 = 1; 
+
+
+%%left traverse upwards 
+while randNum1 - ctr1 ~= 0 && randNum2 - ctr2 ~= 0
+    Fire(randNum1 - ctr1, randNum2 - ctr2) = Int*exp(-ctr1/10);
+    ctr1 = ctr1 + 1;
+    ctr2 = ctr2 + 1;
+end
+
+ctr1 = 1; 
+ctr2 = 1; 
+
+
+%%left traverse downwards
+while randNum1 - ctr1 ~= 0 && randNum2 + ctr2 ~= n+1
+    Fire(randNum1 - ctr1, randNum2 + ctr2) = Int*exp(-ctr1/10);
+    ctr1 = ctr1 + 1;
+    ctr2 = ctr2 + 1;
+end
+
+ctr1 = 1; 
+ctr2 = 1; 
+
+
+%%right traverse upwards 
+while  randNum1 + ctr1 ~= n+1 && randNum2 - ctr2 ~= 0
+    Fire(randNum1 + ctr1, randNum2 - ctr2) = Int*exp(-ctr1/10);
+    ctr1 = ctr1 + 1;
+    ctr2 = ctr2 + 1;
+end
+
+
+ctr1 = 1; 
+ctr2 = 1; 
+
+
+%%right traverse downwards
+while  randNum1 + ctr1 ~= n+1 && randNum2 + ctr2 ~= n+1
+    Fire(randNum1 + ctr1, randNum2 + ctr2) = Int*exp(-ctr1/10);
+    ctr1 = ctr1 + 1;
+    ctr2 = ctr2 + 1;
+end
+
+for ii = 1:n
+    for kk = 1:n
+        if Fire(ii, kk) == 0
+            Fire(ii, kk) = max(Fire(:,kk))*0.7;
+            Fire(ii, kk) = max(Fire(ii,:))*0.7;
+        end
+    end
+end
+
+figure;
+imagesc(Fire, [0 1]); 
+colormap(hot);
+axis equal tight;
+title('Fire Intensity with Drone Positions');
+hold on;
+
+for i = 1:numDrones
+    pos = drones(i).pos;  % [row, col]
+    plot(pos(2), pos(1), 'ws', 'MarkerFaceColor', 'w', 'MarkerSize', 8);  % white square
+    text(pos(2), pos(1), num2str(drones(i).id), ...
+        'Color','k','FontWeight','bold','HorizontalAlignment','center');
+end
+
+hold off;
